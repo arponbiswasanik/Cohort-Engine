@@ -1,265 +1,339 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as LineTooltip, ResponsiveContainer,
-  ScatterChart, Scatter, ZAxis, Cell, Tooltip as ScatterTooltip
-} from "recharts";
+import Link from "next/link";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Outfit } from "next/font/google";
 
-const CLUSTER_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-const CLUSTER_NAMES = ['Loyal VIPs', 'Steady Subscribers', 'Value Seekers', 'High-Risk Flight Risks'];
+const outfit = Outfit({ subsets: ["latin"] });
 
-export default function Dashboard() {
-  // Base Data States
-  const [survivalData, setSurvivalData] = useState([]);
-  const [clusterData, setClusterData] = useState([]);
-  const [loading, setLoading] = useState(true);
+// ----------------------------------------------------------------------
+// 1. MAIN PAGE COMPONENT
+// ----------------------------------------------------------------------
+export default function LandingPage() {
+  return (
+    <div className={`min-h-screen bg-slate-50 text-slate-600 ${outfit.className} selection:bg-indigo-500/20 overflow-x-hidden relative`}>
+      <Navbar />
+      <main className="pt-32 pb-20 relative z-10">
+        <Hero />
+        <Metrics />
+        <FeatureRiskOracle />
+        <FeatureSimulations />
+        <Steps />
+        <CTA />
+      </main>
+      <Footer />
+    </div>
+  );
+}
 
-  // Search Engine States
-  const [searchId, setSearchId] = useState("3668-QPYBK"); // Defaulting to a known high-risk user
-  const [prediction, setPrediction] = useState<any>(null);
-  const [loadingPrediction, setLoadingPrediction] = useState(false);
+// ----------------------------------------------------------------------
+// 2. REUSABLE ANIMATION VARIANT
+// ----------------------------------------------------------------------
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+};
 
-  // Advanced Feature States
-  const [simData, setSimData] = useState<any>(null);
-  const [simulatedRisk, setSimulatedRisk] = useState<number | null>(null);
-  const [loadingSim, setLoadingSim] = useState(false);
-  
-  const [agentEmail, setAgentEmail] = useState<string | null>(null);
-  const [loadingAgent, setLoadingAgent] = useState(false);
+// ----------------------------------------------------------------------
+// 3. INDIVIDUAL SECTION COMPONENTS
+// ----------------------------------------------------------------------
 
-  // Boot up data fetch
-  useEffect(() => {
-    Promise.all([
-      fetch("http://127.0.0.1:8000/api/survival").then(res => res.json()),
-      fetch("http://127.0.0.1:8000/api/clusters").then(res => res.json())
-    ]).then(([survivalRes, clusterRes]) => {
-      setSurvivalData(survivalRes.data);
-      setClusterData(clusterRes.data);
-      setLoading(false);
-    });
-  }, []);
-
-  // 1. Core Prediction Search
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoadingPrediction(true);
-    setSimulatedRisk(null);
-    setAgentEmail(null);
-    
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/api/predict/${searchId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPrediction(data);
-        setSimData(data.features); // Load their original features into the simulator
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingPrediction(false);
-    }
-  };
-
-  // 2. Run the "What-If" Simulation
-  const runSimulation = async () => {
-    setLoadingSim(true);
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/simulate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: prediction.customer_id,
-          ...simData
-        })
-      });
-      const data = await res.json();
-      setSimulatedRisk(data.simulated_risk_percentage);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingSim(false);
-    }
-  };
-
-  // 3. Generate Llama 3 Retention Strategy
-  const generateStrategy = async () => {
-    setLoadingAgent(true);
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_id: prediction.customer_id,
-          risk_percentage: prediction.churn_risk_percentage,
-          contract: simData.Contract,
-          monthly_charges: simData.MonthlyCharges
-        })
-      });
-      const data = await res.json();
-      setAgentEmail(data.strategy_email);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingAgent(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-xl font-semibold text-gray-600 animate-pulse">Initializing AI Architecture...</p>
-      </div>
-    );
-  }
+function Navbar() {
+  const [hoveredNav, setHoveredNav] = useState("get-started");
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 text-gray-900 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <nav className="fixed w-full z-50 bg-white/70 backdrop-blur-md border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <span className="text-white font-bold text-sm">C</span>
+          </div>
+          <span className="text-slate-900 font-bold tracking-tight text-lg">Cohort Engine</span>
+        </div>
         
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight mb-2">Cohort Engine</h1>
-          <p className="text-gray-500 text-lg">Predictive & Prescriptive AI Analytics Pipeline</p>
+        <div className="flex items-center gap-1" onMouseLeave={() => setHoveredNav("get-started")}>
+          {[
+            { id: "resources", label: "Resources", href: "/dashboard", hideMobile: true },
+            { id: "sign-in", label: "Sign in", href: "/sign-in" },
+            { id: "get-started", label: "Get started", href: "/sign-up" },
+          ].map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              onMouseEnter={() => setHoveredNav(item.id)}
+              className={`relative px-4 py-2 text-sm font-semibold transition-colors duration-200 z-10 ${
+                item.hideMobile ? "hidden sm:block" : ""
+              } ${hoveredNav === item.id ? "text-white" : "text-slate-600"}`}
+            >
+              {hoveredNav === item.id && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 bg-slate-900 rounded-lg shadow-md -z-10"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              {item.label}
+            </Link>
+          ))}
         </div>
-
-        {/* TOP ROW: Search & Interactive Commands */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Search Panel */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 lg:col-span-1">
-            <h2 className="text-xl font-bold mb-4">Risk Oracle</h2>
-            <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-              <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} placeholder="Customer ID" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-              <button type="submit" className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">Search</button>
-            </form>
-
-            {prediction && (
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-sm text-gray-500 font-medium uppercase">Customer ID</p>
-                  <p className="text-xl font-bold">{prediction.customer_id}</p>
-                </div>
-                <div className={`p-6 rounded-xl border ${prediction.risk_status === 'High Risk' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                  <p className="text-sm font-medium uppercase tracking-wider mb-1">Baseline Churn Risk</p>
-                  <p className="text-5xl font-extrabold">{prediction.churn_risk_percentage}%</p>
-                  <p className="text-sm mt-2 font-semibold opacity-80 uppercase">{prediction.risk_status}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Advanced Command Center (Simulation & AI) */}
-          {prediction && simData && (
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-indigo-100 lg:col-span-2 flex flex-col md:flex-row gap-8">
-              
-              {/* Simulation Engine */}
-              <div className="flex-1 space-y-4">
-                <h2 className="text-xl font-bold text-indigo-900 flex items-center gap-2">
-                  <span>⚙️</span> "What-If" Interventions
-                </h2>
-                
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Contract Type</label>
-                  <select value={simData.Contract} onChange={(e) => setSimData({...simData, Contract: e.target.value})} className="w-full px-3 py-2 border rounded-lg bg-gray-50">
-                    <option value="Month-to-month">Month-to-month</option>
-                    <option value="One year">One year</option>
-                    <option value="Two year">Two year</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Monthly Bill (${simData.MonthlyCharges})</label>
-                  <input type="range" min="20" max="120" step="5" value={simData.MonthlyCharges} onChange={(e) => setSimData({...simData, MonthlyCharges: parseFloat(e.target.value)})} className="w-full" />
-                </div>
-
-                <button onClick={runSimulation} className="w-full py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700">
-                  {loadingSim ? "Calculating..." : "Run Scenario via Random Forest"}
-                </button>
-
-                {simulatedRisk !== null && (
-                  <div className={`p-4 mt-4 rounded-xl border ${simulatedRisk < prediction.churn_risk_percentage ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                    <p className="text-sm font-semibold">Simulated Risk Level</p>
-                    <p className="text-2xl font-bold">{simulatedRisk}%</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Generative AI Agent */}
-              <div className="flex-1 space-y-4 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-8">
-                <h2 className="text-xl font-bold text-emerald-900 flex items-center gap-2">
-                  <span>✨</span> Llama 3 Agent
-                </h2>
-                <p className="text-sm text-gray-500">Generate a personalized intervention strategy based on current structural variables.</p>
-                
-                <button onClick={generateStrategy} className="w-full py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700">
-                  {loadingAgent ? "Groq LPU Processing..." : "Draft Strategy Email"}
-                </button>
-
-                {agentEmail && (
-                  <div className="mt-4 p-4 bg-gray-900 text-gray-100 rounded-xl text-sm leading-relaxed border border-gray-700 shadow-inner">
-                    {agentEmail}
-                  </div>
-                )}
-              </div>
-
-            </div>
-          )}
-        </div>
-
-        {/* BOTTOM ROW: The Visualizations */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Clustering Map */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Behavioral Matrix</h2>
-            <p className="text-sm text-gray-500 mb-6">Unsupervised PCA Projection</p>
-            <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="x" type="number" hide />
-                  <YAxis dataKey="y" type="number" hide />
-                  <ZAxis dataKey="z" type="number" range={[20, 100]} />
-                  <ScatterTooltip cursor={{ strokeDasharray: '3 3' }} content={({ payload }) => {
-                      if (payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="bg-white p-2 border rounded shadow-lg text-xs font-bold" style={{ color: CLUSTER_COLORS[data.cluster_group] }}>
-                            {CLUSTER_NAMES[data.cluster_group]}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Scatter data={clusterData} opacity={0.6}>
-                    {clusterData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={CLUSTER_COLORS[entry.cluster_group]} />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Survival Chart */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Macro Retention Curve</h2>
-            <p className="text-sm text-gray-500 mb-6">Kaplan-Meier Base Estimation</p>
-            <div className="h-[350px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={survivalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                  <XAxis dataKey="month" tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis domain={[0, 1]} tickFormatter={(t) => `${(t * 100).toFixed(0)}%`} tick={{ fill: '#9ca3af', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <LineTooltip formatter={(value: any) => [`${(value * 100).toFixed(1)}%`, 'Retention']} />
-                  <Line type="monotone" dataKey="survival_probability" stroke="#2563eb" strokeWidth={3} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
       </div>
-    </div>
+    </nav>
+  );
+}
+
+function Hero() {
+  return (
+    <motion.section 
+      initial="hidden" animate="visible" 
+      variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.2 } } }}
+      className="max-w-7xl mx-auto px-6 pt-10 text-center"
+    >
+      <motion.div variants={fadeUpVariant} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold tracking-wide mb-8">
+        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+        A dedicated retention analyst for every user
+      </motion.div>
+      
+      <motion.h1 variants={fadeUpVariant} className="text-6xl md:text-8xl font-semibold tracking-tight text-slate-900 max-w-5xl mx-auto leading-[1.05] mb-8">
+        AI agents running tailored <br className="hidden md:block" />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+          churn analytics 24/7
+        </span>
+      </motion.h1>
+
+      <motion.p variants={fadeUpVariant} className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+        Most customer journeys are full of blind spots. Let our predictive engine handhold your accounts from early warning signs to automated retention.
+      </motion.p>
+
+      {/* Button Section Updated */}
+      <motion.div variants={fadeUpVariant} className="flex items-center justify-center">
+        <Link href="/sign-up" className="inline-flex px-8 py-4 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-all items-center gap-2 shadow-xl shadow-slate-900/10 hover:-translate-y-0.5">
+          Launch Engine
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      </motion.div>
+    </motion.section>
+  );
+}
+
+function Metrics() {
+  return (
+    <motion.section 
+      initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+      className="max-w-5xl mx-auto px-6 mt-24 mb-32"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-10 border-y border-slate-200 bg-white/50 backdrop-blur-md rounded-3xl px-8 shadow-sm">
+        <div className="text-center md:text-left">
+          <p className="text-5xl font-semibold text-slate-900 mb-2">40<span className="text-indigo-600">%</span></p>
+          <p className="text-sm font-medium text-slate-500">Reduction in unexpected churn</p>
+        </div>
+        <div className="text-center md:text-left">
+          <p className="text-5xl font-semibold text-slate-900 mb-2">3.5<span className="text-indigo-600">x</span></p>
+          <p className="text-sm font-medium text-slate-500">Increase in saved revenue</p>
+        </div>
+        <div className="text-center md:text-left border-t border-slate-200 md:border-t-0 md:border-l pt-6 md:pt-0 md:pl-8 flex flex-col justify-center">
+          <h4 className="text-sm font-bold text-slate-900 mb-2">Validated Predictive Modeling</h4>
+          <p className="text-sm text-slate-600 leading-relaxed font-light">
+            A complete machine learning pipeline engineered for SaaS revenue forecasting. Built with rigorous statistical validation across a 500-company dataset to ensure high-accuracy predictions and drive measurable business impact.
+          </p>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function FeatureRiskOracle() {
+  return (
+    <motion.section 
+      id="demo" initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+      className="max-w-7xl mx-auto px-6 mb-32 flex flex-col md:flex-row items-center gap-16"
+    >
+      <div className="flex-1 space-y-6">
+        <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 tracking-tight">
+          Identify intent with the <span className="text-indigo-600">Risk Oracle</span>
+        </h2>
+        <p className="text-lg text-slate-600 leading-relaxed font-light">
+          Filters high-risk users and nudges them towards retention. The Random Forest classifier scores every account dynamically, giving you the exact probability of flight risk.
+        </p>
+        <ul className="space-y-4 pt-4 font-light">
+          {['Discovers negative signals in real-time', 'Analyzes contract and billing structures', 'Flags accounts requiring immediate attention'].map((item, i) => (
+            <li key={i} className="flex items-center gap-3 text-slate-700">
+              <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-xs font-semibold">✓</div>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex-1 w-full">
+        <div className="relative rounded-2xl bg-gradient-to-b from-slate-200 to-slate-100 p-[1px] shadow-2xl shadow-slate-200/50">
+          <div className="absolute inset-0 bg-indigo-500/5 blur-xl"></div>
+          <div className="relative bg-white rounded-2xl p-8 overflow-hidden h-[400px] flex flex-col items-center justify-center">
+            <div className="w-full max-w-sm bg-slate-50 rounded-xl p-6 border border-slate-200 shadow-lg relative z-10 animate-pulse">
+              <div className="h-4 w-24 bg-slate-200 rounded mb-4"></div>
+              <div className="text-4xl font-semibold text-slate-900 mb-1">87.4%</div>
+              <div className="text-xs font-semibold text-rose-500 uppercase tracking-widest mb-6">High Flight Risk</div>
+              <div className="space-y-2">
+                <div className="h-2 w-full bg-slate-300 rounded"></div>
+                <div className="h-2 w-4/5 bg-slate-300 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function FeatureSimulations() {
+  const [hoveredBar, setHoveredBar] = useState(2); 
+  const bars = [40, 60, 90, 30];
+
+  return (
+    <motion.section 
+      initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+      className="max-w-7xl mx-auto px-6 mb-32 flex flex-col md:flex-row-reverse items-center gap-16"
+    >
+      <div className="flex-1 space-y-6">
+        <h2 className="text-3xl md:text-5xl font-semibold text-slate-900 tracking-tight">
+          Test strategies with <span className="text-sky-500">Simulations</span>
+        </h2>
+        <p className="text-lg text-slate-600 leading-relaxed font-light">
+          Run deep-dive scenarios without touching live data. Modify pricing, adjust contract lengths, and immediately see how interventions alter the survival probability curve.
+        </p>
+      </div>
+      <div className="flex-1 w-full">
+        <div className="relative rounded-2xl bg-gradient-to-b from-slate-200 to-slate-100 p-[1px] shadow-2xl shadow-slate-200/50">
+           <div className="absolute inset-0 bg-sky-500/5 blur-xl"></div>
+          <div className="relative bg-white rounded-2xl p-8 overflow-hidden h-[400px] flex items-end">
+             <div 
+               className="w-full flex items-end justify-between gap-4 h-48 opacity-90" 
+               onMouseLeave={() => setHoveredBar(2)}
+             >
+                {bars.map((height, index) => {
+                  const isActive = hoveredBar === index;
+                  
+                  return (
+                    <div 
+                      key={index}
+                      onMouseEnter={() => setHoveredBar(index)}
+                      className={`w-1/5 rounded-t-lg transition-all duration-300 ease-out cursor-pointer relative ${
+                        isActive 
+                          ? "bg-sky-500 shadow-[0_0_20px_rgba(14,165,233,0.4)] border-transparent scale-y-[1.03] origin-bottom" 
+                          : "bg-slate-200 border border-b-0 border-slate-300 hover:bg-slate-300"
+                      }`}
+                      style={{ height: `${height}%` }}
+                    >
+                      {isActive && (
+                        <motion.div 
+                          layoutId="simulated-badge"
+                          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                          className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg whitespace-nowrap z-10"
+                        >
+                          Simulated
+                        </motion.div>
+                      )}
+                    </div>
+                  );
+                })}
+             </div>
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function Steps() {
+  const [hoveredStep, setHoveredStep] = useState(2);
+
+  const stepsData = [
+    { title: "Connect Database", desc: "Link your CRM or raw CSV data securely." },
+    { title: "Train the Agent", desc: "Engine compiles PCA clusters and survival curves." },
+    { title: "Deploy Interventions", desc: "Llama 3 generates dynamic mitigation emails." }
+  ];
+
+  return (
+    <motion.section 
+      initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+      className="max-w-4xl mx-auto px-6 mb-32 text-center"
+    >
+      <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-16">Get started in minutes</h2>
+      <div 
+        className="grid grid-cols-1 md:grid-cols-3 gap-8 relative"
+        onMouseLeave={() => setHoveredStep(2)}
+      >
+        <div className="hidden md:block absolute top-8 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+        
+        {stepsData.map((step, index) => {
+          const isActive = hoveredStep === index;
+          return (
+            <div 
+              key={index} 
+              onMouseEnter={() => setHoveredStep(index)}
+              className="relative z-10 flex flex-col items-center cursor-pointer group"
+            >
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-xl font-semibold mb-6 transition-all duration-300 ${
+                isActive 
+                  ? "bg-indigo-600 border border-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.4)] scale-110" 
+                  : "bg-white border border-slate-200 text-slate-900 shadow-md group-hover:scale-105"
+              }`}>
+                {index + 1}
+              </div>
+              <h3 className={`font-medium mb-2 transition-colors duration-300 ${isActive ? "text-indigo-600" : "text-slate-900"}`}>
+                {step.title}
+              </h3>
+              <p className="text-sm text-slate-500 font-light px-4">
+                {step.desc}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </motion.section>
+  );
+}
+
+function CTA() {
+  return (
+    <motion.section 
+      initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUpVariant}
+      className="max-w-5xl mx-auto px-6 relative mb-10"
+    >
+      <div className="bg-white border border-slate-200 shadow-xl shadow-slate-200/50 rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
+        <h2 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-6 relative z-10">
+          Give a white glove experience to every prospect.
+        </h2>
+        <p className="text-lg text-slate-500 mb-10 max-w-2xl mx-auto relative z-10 font-light">
+          First version ready in minutes. Scale personalized retention without growing your support team.
+        </p>
+        <div className="relative z-10">
+          <Link href="/sign-up" className="inline-flex items-center gap-2 px-8 py-4 bg-slate-900 text-white font-semibold rounded-xl hover:bg-slate-800 transition-all shadow-md hover:-translate-y-0.5">
+            Create free account
+          </Link>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-slate-200 bg-white relative z-10">
+      <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="flex items-center gap-2">
+           <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-xs">C</span>
+           </div>
+           <span className="text-slate-900 font-medium text-sm">Cohort Engine</span>
+        </div>
+        <div className="flex gap-8 text-sm text-slate-500 font-light">
+          <span className="hover:text-slate-900 cursor-pointer transition-colors">Privacy Policy</span>
+          <span className="hover:text-slate-900 cursor-pointer transition-colors">Terms of Service</span>
+          <span className="hover:text-slate-900 cursor-pointer transition-colors">System Status</span>
+        </div>
+      </div>
+    </footer>
   );
 }
