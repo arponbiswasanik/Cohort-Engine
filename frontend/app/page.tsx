@@ -95,14 +95,14 @@ function Hero() {
       </motion.div>
       
       <motion.h1 variants={fadeUpVariant} className="text-6xl md:text-8xl font-semibold tracking-tight text-slate-900 max-w-5xl mx-auto leading-[1.05] mb-8">
-        AI agents running tailored <br className="hidden md:block" />
+        Turn attrition vectors into <br className="hidden md:block" />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-          churn analytics 24/7
+          proactive retention
         </span>
       </motion.h1>
 
       <motion.p variants={fadeUpVariant} className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-        Most customer journeys are full of blind spots. Let our predictive engine handhold your accounts from early warning signs to automated retention.
+        Go beyond static dashboards. By combining advanced survival analysis with AI-generated mitigation plans, our platform seamlessly turns early warning signs into effective retention strategies.
       </motion.p>
 
       {/* Button Section Updated */}
