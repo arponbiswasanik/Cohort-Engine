@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
@@ -15,6 +17,46 @@ const forecastData = [
 ];
 
 export default function DashboardOverviewPage() {
+  
+  const [hasData, setHasData] = useState(false); 
+
+  
+if (!hasData) {
+    return (
+      <main className="p-8 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-sm">
+          <div className="w-20 h-20 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">No Data Available</h2>
+          <p className="text-slate-500 mb-8 text-sm leading-relaxed">
+            Your dashboard is currently empty. Please upload your historical revenue dataset to generate AI forecasts and churn metrics.
+          </p>
+          
+          {/* Aligned Buttons Area */}
+          <div className="flex flex-col items-center gap-4">
+            <Link 
+              href="/dashboard/datasets"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm w-full sm:w-auto"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              Go to Datasets
+            </Link>
+
+            {/* Test Button just to toggle state manually for now */}
+            <button 
+              onClick={() => setHasData(true)}
+              className="text-xs text-slate-400 hover:text-indigo-600 hover:underline transition-all"
+            >
+              Preview with dummy data
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  
   return (
     <main className="p-8">
       <header className="flex justify-between items-center mb-10">
