@@ -109,7 +109,7 @@ export default function SignInPage() {
                 <label className="block text-sm font-medium text-slate-700" htmlFor="password">
                   Password
                 </label>
-                <Link href="#" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Forgot password?</Link>
+                <Link href="/forgot-password" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">Forgot password?</Link>
               </div>
               <input 
                 type="password" 
