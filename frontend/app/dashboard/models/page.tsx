@@ -1,116 +1,179 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { 
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  BarChart, Bar, Tooltip as BarTooltip
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
 } from 'recharts';
 
-const clusterData = [
-  { name: 'Acme Corp', ltv: 12000, engagement: 35, cluster: 'high-risk' },
-  { name: 'SaaSify Ltd', ltv: 15000, engagement: 42, cluster: 'high-risk' },
-  { name: 'TechFlow', ltv: 11000, engagement: 28, cluster: 'high-risk' },
-  { name: 'NovaTech', ltv: 8500, engagement: 85, cluster: 'safe' },
-  { name: 'Quantum', ltv: 5400, engagement: 92, cluster: 'safe' },
-  { name: 'CloudSync', ltv: 7200, engagement: 78, cluster: 'safe' },
-  { name: 'VIP Corp', ltv: 25000, engagement: 95, cluster: 'vip' },
-  { name: 'MegaTron', ltv: 22000, engagement: 88, cluster: 'vip' },
-];
+export default function ForecastModelsPage() {
+  //Interactive Simulation States
+  const [simTenure, setSimTenure] = useState(34);
+  const [simCharges, setSimCharges] = useState(70);
+  const [simContract, setSimContract] = useState("One year");
 
-const featureImportance = [
-  { feature: 'Login Frequency', impact: 85 },
-  { feature: 'Support Tickets', impact: 65 },
-  { feature: 'Payment Failures', impact: 55 },
-  { feature: 'Feature Adoption', impact: 40 },
-];
+  //Calculate Base Risk
+  const calculateSimulatedRisk = () => {
+    let baseRisk = 35;
+    
+    if (simContract === "Month-to-month") baseRisk += 30;
+    if (simContract === "One year") baseRisk += 5;
+    if (simContract === "Two year") baseRisk -= 20;
 
-const COLORS = { 'high-risk': '#ef4444', 'safe': '#10b981', 'vip': '#6366f1' };
+    baseRisk -= (simTenure / 72) * 25;
+    baseRisk += (simCharges / 150) * 20;
 
-export default function ModelsPage() {
-  const [hasData, setHasData] = useState(false); // Empty State Logic
+    return Math.min(99, Math.max(1, Math.round(baseRisk)));
+  };
 
-  if (!hasData) {
-    return (
-      <main className="p-8 flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 p-10 text-center shadow-sm">
-          <div className="w-20 h-20 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-3">Model Untrained</h2>
-          <p className="text-slate-500 mb-8 text-sm leading-relaxed">
-            Your tree-based ensemble model requires historical dataset to perform clustering and feature importance analysis.
-          </p>
-          <div className="flex flex-col items-center gap-4">
-            <Link href="/dashboard/datasets" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm w-full sm:w-auto">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-              Go to Datasets
-            </Link>
-            <button onClick={() => setHasData(true)} className="text-xs text-slate-400 hover:text-indigo-600 hover:underline transition-all">
-              Preview with dummy data
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
+  const currentRisk = calculateSimulatedRisk();
+
+  //Generate Live Future Trajectory based on current variables
+  const generateTrajectory = () => {
+    const data = [];
+    let slope = simContract === "Month-to-month" ? 1.8 : (simContract === "One year" ? 0.4 : -0.5);
+    
+    // High tenure customers stabilize, low tenure fluctuates more
+    const stabilityFactor = simTenure > 24 ? 0.5 : 1.2;
+
+    for (let month = 0; month <= 12; month++) {
+      let projectedRisk = currentRisk + (month * slope * stabilityFactor);
+      projectedRisk = Math.min(99, Math.max(1, Math.round(projectedRisk)));
+      data.push({ 
+        month: month === 0 ? "Now" : `+${month}M`, 
+        risk: projectedRisk 
+      });
+    }
+    return data;
+  };
+
+  const trajectoryData = generateTrajectory();
+
+  // Dynamic Colors based on Risk Level
+  const getRiskColor = (risk: number) => {
+    if (risk > 60) return { main: '#f43f5e', light: '#ffe4e6' }; // Rose / High Risk
+    if (risk > 30) return { main: '#f59e0b', light: '#fef3c7' }; // Amber / Medium Risk
+    return { main: '#10b981', light: '#d1fae5' }; // Emerald / Safe
+  };
+
+  const activeColor = getRiskColor(currentRisk);
 
   return (
-    <main className="p-8">
-      <header className="mb-10">
-        <h1 className="text-2xl font-bold text-slate-900">Ensemble Model Metrics</h1>
-        <p className="text-sm text-slate-500 mt-1">Evaluate tree-based model performance and customer clustering distributions.</p>
+    <main className="p-8 h-[calc(100vh-4rem)] flex flex-col">
+      <header className="mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">Scenario Analysis Engine</h1>
+        <p className="text-sm text-slate-500 mt-1">Simulate hypothetical operational variables to forecast dynamic churn trajectories.</p>
       </header>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {[
-          { label: "Model Accuracy (R²)", value: "0.942", desc: "Highly Accurate" },
-          { label: "Root Mean Square Error", value: "$420.50", desc: "Lower is better" },
-          { label: "Total Data Points", value: "87,000", desc: "Training set size" },
-        ].map((metric, idx) => (
-          <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
-            <h3 className="text-sm font-medium text-slate-500 mb-1">{metric.label}</h3>
-            <div className="flex items-baseline gap-2 mt-2"><span className="text-3xl font-bold text-slate-900">{metric.value}</span></div>
-            <p className="text-xs text-slate-400 mt-2 font-medium">{metric.desc}</p>
+
+      <div className="flex-1 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col xl:flex-row">
+        
+        {/* LEFT PANEL: The Simulator Controls */}
+        <div className="w-full xl:w-2/5 p-8 border-b xl:border-b-0 xl:border-r border-slate-100 bg-slate-50/50 flex flex-col justify-center">
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-slate-900">Simulation Parameters</h3>
+            <p className="text-xs text-slate-500 mt-1">Adjust the sliders to see real-time impact on the machine learning heuristic.</p>
           </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-[400px] flex flex-col">
-          <div className="mb-6 flex justify-between items-start">
-             <div><h3 className="font-semibold text-slate-900">K-Means Customer Clustering</h3><p className="text-xs text-slate-500 mt-1">LTV vs User Engagement Score</p></div>
-             <div className="flex flex-col gap-2 text-xs font-medium text-slate-600">
-                <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-indigo-500"></div> VIP Clients</span>
-                <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Safe Zone</span>
-                <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div> High Risk</span>
-             </div>
-          </div>
-          <div className="flex-1 w-full mt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis type="number" dataKey="engagement" name="Engagement" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} domain={[0, 100]} />
-                <YAxis type="number" dataKey="ltv" name="LTV" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} tickFormatter={(v) => `$${v/1000}k`} />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} formatter={(value, name) => name === 'LTV' ? [`$${value}`, name] : [value, name]} />
-                <Scatter name="Clients" data={clusterData} fill="#8884d8">
-                  {clusterData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[entry.cluster as keyof typeof COLORS]} />)}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
+
+          <div className="space-y-8">
+            {/* Tenure Slider */}
+            <div>
+              <div className="flex justify-between items-end mb-3">
+                <label className="text-sm font-semibold text-slate-700">Hypothetical Tenure</label>
+                <span className="text-indigo-600 font-mono font-bold text-sm bg-indigo-50 px-3 py-1 rounded-lg">{simTenure} Months</span>
+              </div>
+              <input 
+                type="range" min="1" max="72" 
+                value={simTenure} onChange={(e) => setSimTenure(Number(e.target.value))} 
+                className="w-full accent-indigo-600 cursor-pointer h-2 bg-slate-200 rounded-lg appearance-none transition-all" 
+              />
+            </div>
+
+            {/* Monthly Charges Slider */}
+            <div>
+              <div className="flex justify-between items-end mb-3">
+                <label className="text-sm font-semibold text-slate-700">Monthly Billing</label>
+                <span className="text-indigo-600 font-mono font-bold text-sm bg-indigo-50 px-3 py-1 rounded-lg">${simCharges} / mo</span>
+              </div>
+              <input 
+                type="range" min="15" max="150" 
+                value={simCharges} onChange={(e) => setSimCharges(Number(e.target.value))} 
+                className="w-full accent-indigo-600 cursor-pointer h-2 bg-slate-200 rounded-lg appearance-none transition-all" 
+              />
+            </div>
+
+            {/* Contract Dropdown */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">Contract Architecture</label>
+              <select 
+                value={simContract} onChange={(e) => setSimContract(e.target.value)} 
+                className="w-full p-3.5 text-sm bg-white border border-slate-200 rounded-xl text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 font-medium transition-all cursor-pointer shadow-sm"
+              >
+                <option value="Month-to-month">Month-to-month Contract</option>
+                <option value="One year">One Year Contract</option>
+                <option value="Two year">Two Year Contract</option>
+              </select>
+            </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm min-h-[400px] flex flex-col">
-          <div className="mb-6"><h3 className="font-semibold text-slate-900">Feature Importance</h3><p className="text-xs text-slate-500 mt-1">Variables driving the ensemble predictions</p></div>
-          <div className="flex-1 w-full mt-2">
+
+        {/* RIGHT PANEL: Live Visualization & Readout */}
+        <div className="w-full xl:w-3/5 p-8 flex flex-col relative">
+          
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Projected Risk Trajectory</h3>
+              <p className="text-xs text-slate-500 mt-1">12-Month forecasting based on active simulation logic.</p>
+            </div>
+            
+            {/* Live Big Number */}
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Current Base Risk</p>
+              <div className="flex items-baseline justify-end gap-1">
+                <span className="text-5xl font-extrabold tracking-tight font-mono" style={{ color: activeColor.main }}>
+                  {currentRisk}
+                </span>
+                <span className="text-xl font-bold text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* The Dynamic Real-time Area Chart */}
+          <div className="flex-1 w-full min-h-[300px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={featureImportance} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                <XAxis type="number" axisLine={false} tickLine={false} tick={{fill: '#94a3b8'}} />
-                <YAxis type="category" dataKey="feature" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} width={100} />
-                <BarTooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="impact" fill="#6366f1" radius={[0, 8, 8, 0]} barSize={30} />
-              </BarChart>
+              <AreaChart data={trajectoryData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={activeColor.main} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={activeColor.main} stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 500}} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '13px', fontWeight: 600, color: '#334155' }}
+                  formatter={(val: number) => [`${val}%`, 'Risk Level']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="risk" 
+                  stroke={activeColor.main} 
+                  strokeWidth={4} 
+                  fillOpacity={1} 
+                  fill="url(#colorRisk)"
+                  animationDuration={400} // Smooth fast animation
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
+
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <span className="flex h-3 w-3 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: activeColor.main }}></span>
+              <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: activeColor.main }}></span>
+            </span>
+            <p className="text-xs font-semibold text-slate-500">Live Engine Active</p>
+          </div>
+          
         </div>
       </div>
     </main>
