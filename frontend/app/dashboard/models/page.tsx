@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 
 export default function ForecastModelsPage() {
-  //Interactive Simulation States
+  // Interactive Simulation States
   const [simTenure, setSimTenure] = useState(34);
   const [simCharges, setSimCharges] = useState(70);
   const [simContract, setSimContract] = useState("One year");
@@ -151,7 +151,7 @@ export default function ForecastModelsPage() {
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '13px', fontWeight: 600, color: '#334155' }}
-                  formatter={(val: number) => [`${val}%`, 'Risk Level']}
+                  formatter={(val: any) => [`${val}%`, 'Risk Level']}
                 />
                 <Area 
                   type="monotone" 
