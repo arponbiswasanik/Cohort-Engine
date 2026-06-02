@@ -140,7 +140,7 @@ export default function DashboardOverviewPage() {
                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => [`$${value.toLocaleString(undefined, {maximumFractionDigits: 0})}`, 'Revenue']}
+                  formatter={(value: any) => [`$${value.toLocaleString(undefined, {maximumFractionDigits: 0})}`, 'Revenue']}
                 />
                 <Area type="monotone" dataKey="actual" stroke="#1e293b" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" />
                 <Area type="monotone" dataKey="predicted" stroke="#6366f1" strokeWidth={3} strokeDasharray="5 5" fillOpacity={1} fill="url(#colorPredicted)" />
