@@ -18,7 +18,7 @@ export default function DashboardOverviewPage() {
   useEffect(() => {
     const fetchOverviewData = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/overview");
+        const response = await fetch("https://cohort-engine.onrender.com/api/overview");
         if (!response.ok) throw new Error("API Network error");
         
         const result = await response.json();

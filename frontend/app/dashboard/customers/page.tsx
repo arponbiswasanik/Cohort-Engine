@@ -30,7 +30,7 @@ export default function CustomersPage() {
       setIsLoading(true);
       try {
         const skip = (page - 1) * ITEMS_PER_PAGE;
-        const response = await fetch(`http://127.0.0.1:8000/api/customers?limit=${ITEMS_PER_PAGE}&skip=${skip}`);
+        const response = await fetch(`https://cohort-engine.onrender.com/api/customers?limit=${ITEMS_PER_PAGE}&skip=${skip}`);
         
         if (!response.ok) throw new Error("API Network error");
         const result = await response.json();
@@ -109,7 +109,7 @@ export default function CustomersPage() {
     setIsCopied(false);
     
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/agent", {
+      const response = await fetch("https://cohort-engine.onrender.com/api/agent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

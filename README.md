@@ -102,7 +102,7 @@ graph TD
 ```bash
    uvicorn main:app --reload
    ```
-   The backend will run on `http://127.0.0.1:8000`.
+   The backend will run on `https://cohort-engine.onrender.com`.
 
 ### Frontend Setup
 1. Navigate to the frontend directory:
