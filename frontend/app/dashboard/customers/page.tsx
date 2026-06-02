@@ -349,7 +349,7 @@ export default function CustomersPage() {
                   <div className="bg-indigo-50/60 p-5 rounded-2xl border border-indigo-100/70">
                     <div className="flex items-center justify-between mb-1.5">
                       <p className="text-sm text-indigo-700 font-bold">Estimated LTV</p>
-                      <svg title="Calculated dynamically based on survival probability" className="w-4 h-4 text-indigo-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      <svg className="w-4 h-4 text-indigo-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <p className="text-2xl font-extrabold text-indigo-900">${selectedCustomer.yearlyLTV.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
                     <p className="text-xs font-semibold text-indigo-500 mt-1.5">Exp. Lifetime: {selectedCustomer.expectedMonths} months</p>
