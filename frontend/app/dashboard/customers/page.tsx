@@ -374,9 +374,9 @@ export default function CustomersPage() {
                       <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11}} domain={[0, 100]} />
                       <RechartsTooltip 
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.05)', fontSize: '13px' }}
-                        formatter={(value: number) => [`${value}%`, 'Retention Prob.']}
+                        formatter={(value: any) => [`${value}%`, 'Retention Prob.']}
                       />
-                      <Area 
+                      <Area
                         type="monotone" 
                         dataKey="probability" 
                         stroke={selectedCustomer.monthlyRisk === 'Safe' ? '#10b981' : '#f43f5e'} 
